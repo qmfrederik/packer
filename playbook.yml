@@ -78,8 +78,27 @@
         path: /opt/keycloak
         state: directory
 
+    - name: Create keycloak user
+      ansible.builtin.user:
+        name: keycloak
+
+    - name: Creates /opt/keycloak/ directory
+      ansible.builtin.file:
+        path: /opt/keycloak/
+        state: directory
+        owner: keycloak
+        mode: '0755'
+
     - name: Install Keycloak into /opt/keycloak
       ansible.builtin.unarchive:
         remote_src: true
         src: /tmp/keycloak.tar.gz
         dest: /opt/keycloak
+        owner: keycloak
+        # Remove the top-level directory
+        extra_opts: ['--strip-components=1', '--show-stored-names']
+
+    - name: Create Keycloak systemd service file
+      template:
+        src: keycloak.service.j2
+        dest: /lib/systemd/system/keycloak.service

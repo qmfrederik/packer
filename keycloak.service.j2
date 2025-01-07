@@ -1,0 +1,14 @@
+[Unit]
+Description=Keycloak
+Documentation=https://www.keycloak.org/
+After=network.target
+
+[Service]
+Type=simple
+User=keycloak
+ExecStart=/opt/keycloak/bin/kc.sh start-dev
+Restart=on-failure
+WorkingDirectory=/opt/keycloak
+
+[Install]
+WantedBy=multi-user.target
