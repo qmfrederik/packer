@@ -89,6 +89,13 @@
         src: epgw.service.j2
         dest: /lib/systemd/system/epgw.service
 
+    - name: Start the Eggplant Gateway service
+      ansible.builtin.systemd_service:
+        name: epgw
+        state: started
+        enabled: true
+        daemon_reload: true
+
     ###########################################################################
     # Install Keycloak                                                        #
     ###########################################################################
