@@ -95,6 +95,7 @@
         state: started
         enabled: true
         daemon_reload: true
+      when: ansible_connection != 'chroot'
 
     ###########################################################################
     # Install Keycloak                                                        #
@@ -159,6 +160,7 @@
         state: started
         enabled: true
         daemon_reload: true
+      when: ansible_connection != 'chroot'
 
     ###########################################################################
     # Configure Keycloak                                                      #
@@ -173,7 +175,9 @@
         auth_password: "{{ keycloak_bootstrap_admin_password }}"
         id: "{{ keycloak_eggplant_realm }}"
         realm: "{{ keycloak_eggplant_realm }}"
+        enabled: true
         state: present
+      when: ansible_connection != 'chroot'
 
     - name: Create the epgw client
       community.general.keycloak_client:
@@ -187,6 +191,7 @@
         direct_access_grants_enabled: true
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
+      when: ansible_connection != 'chroot'
 
     - name: Create an Eggplant user
       community.general.keycloak_user:
@@ -194,7 +199,10 @@
         auth_realm: master
         auth_username: "{{ keycloak_bootstrap_admin_username }}"
         auth_password: "{{ keycloak_bootstrap_admin_password }}"
+        realm: "{{ keycloak_eggplant_realm }}"
         username: eggy
+        first_name: Eggy
+        last_name: Aubergine
         email: eggy.aubergine@eggplant.io
         enabled: true
         emailVerified: false
@@ -203,3 +211,4 @@
               value: aubergine
               temporary: false
         state: present
+      when: ansible_connection != 'chroot'
