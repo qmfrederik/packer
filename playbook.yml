@@ -2,8 +2,84 @@
 # playbook.yml
 - name: 'Provision Image'
   hosts: default
+  vars:
+    epgw_url_arm64: https://assets.eggplantsoftware.com/gateway/epgw.4.25.39.linux-arm64.tar.gz
+    epgw_hash_arm64: sha256:71ced40b94053f2ab8292005126d1ae5d37f09d37a9c4ce5a6e6afc6bd63a276
+
+    epgw_url_x64: https://assets.eggplantsoftware.com/gateway/epgw.4.25.39.linux-x64.tar.gz
+    epgw_hash_x64: sha256:d63d84dc37124cd69282b7447351f0efc0ba761ae44f3eda69b29a6c23e64f3e
+
+    keycloak_url: https://github.com/keycloak/keycloak/releases/download/26.0.7/keycloak-26.0.7.tar.gz
+    keycloak_hash: sha1:82b65b4741378a9fda1fdd3556c7b3a58c8a4ebd
   become: true
 
   tasks:
     - name: "Install dependencies ({{ ansible_distribution }})"
       include_tasks: "playbook.{{ ansible_distribution | lower }}.yml"
+
+    - name: Download Eggplant Gateway (arm64)
+      ansible.builtin.get_url:
+        url: '{{ epgw_url_arm64 }}'
+        dest: '/tmp/epgw.tar.gz'
+        checksum: '{{ epgw_hash_arm64 }}'
+        mode: '644'
+      when: ansible_architecture == "aarch64"
+
+    - name: Download Eggplant Gateway (x64)
+      ansible.builtin.get_url:
+        url: '{{ epgw_url_x64 }}'
+        dest: '/tmp/epgw.tar.gz'
+        checksum: '{{ epgw_hash_x64 }}'
+        mode: '644'
+      when: ansible_architecture == "x86_64"
+
+    - name: Create Eggplant Gateway directory
+      ansible.builtin.file:
+        path: /opt/epgw
+        state: directory
+
+    - name: Install Eggplant Gateway into /opt/epgw
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: /tmp/epgw.tar.gz
+        dest: /opt/epgw
+      
+    - name: Create /usr/local/bin/epgw symlink
+      ansible.builtin.file:
+        src: /opt/epgw/epgw
+        dest: /usr/local/bin/epgw
+        state: link
+
+    - name: Create epgw user
+      ansible.builtin.user:
+        name: epgw
+
+    - name: Creates /var/lib/epgw directory
+      ansible.builtin.file:
+        path: /var/lib/epgw
+        state: directory
+        owner: epgw
+        mode: '0755'
+
+    - name: Create epgw systemd service file
+      template:
+        src: epgw.service.j2
+        dest: /lib/systemd/system/epgw.service
+
+    - name: Download Keycloak
+      ansible.builtin.get_url:
+        url: '{{ keycloak_url }}'
+        dest: '/tmp/keycloak.tar.gz'
+        checksum: '{{ keycloak_hash }}'
+        mode: '644'
+
+    - name: Create Eggplant Gateway directory
+      ansible.builtin.file:
+        path: /opt/keycloak
+        state: directory
+
+    - name: Install Keycloak into /opt/keycloak
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: /tmp/keycloak.tar.gz
+        dest: /opt/keycloak

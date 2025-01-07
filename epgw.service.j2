@@ -1,0 +1,15 @@
+[Unit]
+Description=Eggplant Gateway
+Documentation=https://docs.eggplantsoftware.com/gateway
+After=network.target
+
+[Service]
+Environment="ASPNETCORE_URLS=http://0.0.0.0:5000"
+Type=simple
+User=epgw
+ExecStart=/usr/local/bin/epgw service
+Restart=on-failure
+WorkingDirectory=/var/lib/epgw
+
+[Install]
+WantedBy=multi-user.target

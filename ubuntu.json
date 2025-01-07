@@ -43,7 +43,6 @@
       {
         "type": "ansible",
         "extra_arguments": [
-            "-vvvvv",
             "--connection=chroot",
             "-e ansible_host=/tmp/rpi_chroot"
         ],
