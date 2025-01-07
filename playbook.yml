@@ -147,9 +147,11 @@
         dest: /lib/systemd/system/keycloak.service
 
     - name: Start Keycloak service
-      ansible.builtin.service:
+      ansible.builtin.systemd_service:
         name: keycloak
         state: started
+        enabled: true
+        daemon_reload: true
 
     ###########################################################################
     # Configure Keycloak                                                      #
