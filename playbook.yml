@@ -11,11 +11,25 @@
 
     keycloak_url: https://github.com/keycloak/keycloak/releases/download/26.0.7/keycloak-26.0.7.tar.gz
     keycloak_hash: sha1:82b65b4741378a9fda1fdd3556c7b3a58c8a4ebd
+
+    quarkus_systemd_notify_url: https://repo1.maven.org/maven2/io/quarkiverse/systemd/notify/quarkus-systemd-notify/1.0.2/quarkus-systemd-notify-1.0.2.jar
+    quarkus_systemd_notify_hash: sha1:3358e05408c5fe9983ed45ed443347316852aebc
+
+    quarkus_systemd_notify_deployment_url: https://repo1.maven.org/maven2/io/quarkiverse/systemd/notify/quarkus-systemd-notify-deployment/1.0.2/quarkus-systemd-notify-deployment-1.0.2.jar
+    quarkus_systemd_notify_deployment_hash: sha1:fddd14a0d21db557c18bd9176f3da6c788a52c26
+
+    keycloak_bootstrap_admin_username: admin
+    keycloak_bootstrap_admin_password: admin
   become: true
 
   tasks:
     - name: "Install dependencies ({{ ansible_distribution }})"
       include_tasks: "playbook.{{ ansible_distribution | lower }}.yml"
+
+    - name: Determine if the Eggplant Gateway is installed
+      ansible.builtin.stat:
+        path: /opt/epgw/epgw
+      register: epgw
 
     - name: Download Eggplant Gateway (arm64)
       ansible.builtin.get_url:
@@ -23,7 +37,7 @@
         dest: '/tmp/epgw.tar.gz'
         checksum: '{{ epgw_hash_arm64 }}'
         mode: '644'
-      when: ansible_architecture == "aarch64"
+      when: ansible_architecture == "aarch64" and not epgw.stat.exists
 
     - name: Download Eggplant Gateway (x64)
       ansible.builtin.get_url:
@@ -31,7 +45,7 @@
         dest: '/tmp/epgw.tar.gz'
         checksum: '{{ epgw_hash_x64 }}'
         mode: '644'
-      when: ansible_architecture == "x86_64"
+      when: ansible_architecture == "x86_64" and not epgw.stat.exists
 
     - name: Create Eggplant Gateway directory
       ansible.builtin.file:
@@ -43,6 +57,7 @@
         remote_src: true
         src: /tmp/epgw.tar.gz
         dest: /opt/epgw
+      when: not epgw.stat.exists
       
     - name: Create /usr/local/bin/epgw symlink
       ansible.builtin.file:
@@ -66,23 +81,24 @@
         src: epgw.service.j2
         dest: /lib/systemd/system/epgw.service
 
+    - name: Determine if the Eggplant Gateway is installed
+      ansible.builtin.stat:
+        path: /opt/keycloak/bin/kc.sh
+      register: keycloak
+
     - name: Download Keycloak
       ansible.builtin.get_url:
         url: '{{ keycloak_url }}'
         dest: '/tmp/keycloak.tar.gz'
         checksum: '{{ keycloak_hash }}'
         mode: '644'
-
-    - name: Create Eggplant Gateway directory
-      ansible.builtin.file:
-        path: /opt/keycloak
-        state: directory
+      when: not keycloak.stat.exists
 
     - name: Create keycloak user
       ansible.builtin.user:
         name: keycloak
 
-    - name: Creates /opt/keycloak/ directory
+    - name: Create /opt/keycloak/ directory
       ansible.builtin.file:
         path: /opt/keycloak/
         state: directory
@@ -97,8 +113,28 @@
         owner: keycloak
         # Remove the top-level directory
         extra_opts: ['--strip-components=1', '--show-stored-names']
+      when: not keycloak.stat.exists
+
+    - name: Download quarkus-systemd-notify-deployment
+      ansible.builtin.get_url:
+        url: '{{ quarkus_systemd_notify_url }}'
+        dest: '/opt/keycloak/providers/'
+        checksum: '{{ quarkus_systemd_notify_hash }}'
+        mode: '644'
+
+    - name: Download quarkus-systemd-notify-deployment
+      ansible.builtin.get_url:
+        url: '{{ quarkus_systemd_notify_deployment_url }}'
+        dest: '/opt/keycloak/providers/'
+        checksum: '{{ quarkus_systemd_notify_deployment_hash }}'
+        mode: '644'
 
     - name: Create Keycloak systemd service file
       template:
         src: keycloak.service.j2
         dest: /lib/systemd/system/keycloak.service
+
+    - name: Start Keycloak servce
+      ansible.builtin.service:
+        name: keycloak
+        state: started
