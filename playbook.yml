@@ -175,7 +175,6 @@
     - name: Start Keycloak (async)
       ansible.builtin.shell: /opt/keycloak/bin/kc.sh start-dev
       environment:
-        JAVA_OPTS_APPEND: "-Dcom.redhat.fips=false"
         KC_BOOTSTRAP_ADMIN_USERNAME: "{{ keycloak_bootstrap_admin_username }}"
         KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_bootstrap_admin_password }}"
       async: 3600
@@ -185,8 +184,7 @@
     - name: Wait Keycloak to start, by checking for port 8080 (up to 20 minutes)
       ansible.builtin.wait_for:
         port: 8080
-        # On an ARM emulator, this can take up to 20 minutes to complete
-        timeout: 1200
+        timeout: 60
 
     ###########################################################################
     # Configure Keycloak                                                      #
