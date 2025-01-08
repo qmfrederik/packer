@@ -25,7 +25,9 @@ jobs:
           packer plugins install github.com/hashicorp/ansible
       - name: Build
         run: /entrypoint.sh build ${{ matrix.os }}.json
+      - name: Compress
+        run: gzip epgw-ubuntu-24.04.img
       - uses: actions/upload-artifact@v4
         with:
-          name: my-artifact
-          path: "*.img"
+          name: epgw-ubuntu-24.04
+          path: "*.img.gz"
