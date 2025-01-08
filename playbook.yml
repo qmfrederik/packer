@@ -89,13 +89,10 @@
         src: epgw.service.j2
         dest: /lib/systemd/system/epgw.service
 
-    - name: Start the Eggplant Gateway service
+    - name: Enable the Eggplant Gateway service
       ansible.builtin.systemd_service:
         name: epgw
-        state: started
         enabled: true
-        daemon_reload: true
-      when: ansible_connection != 'chroot'
 
     ###########################################################################
     # Install Keycloak                                                        #
@@ -154,11 +151,15 @@
         src: keycloak.service.j2
         dest: /lib/systemd/system/keycloak.service
 
+    - name: Enable the Keycloak service
+      ansible.builtin.systemd_service:
+        name: keycloak
+        enabled: true
+
     - name: Start Keycloak service
       ansible.builtin.systemd_service:
         name: keycloak
         state: started
-        enabled: true
         daemon_reload: true
       when: ansible_connection != 'chroot'
 
