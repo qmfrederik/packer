@@ -94,11 +94,18 @@
         name: epgw
         enabled: true
 
+    - name: Start the Eggplant Gateway service
+      ansible.builtin.systemd_service:
+        name: epgw
+        state: started
+        daemon_reload: true
+      when: ansible_connection != 'chroot'
+
     ###########################################################################
     # Install Keycloak                                                        #
     ###########################################################################
 
-    - name: Determine if the Eggplant Gateway is installed
+    - name: Determine if the Keycloak is installed
       ansible.builtin.stat:
         path: /opt/keycloak/bin/kc.sh
       register: keycloak
@@ -156,12 +163,30 @@
         name: keycloak
         enabled: true
 
-    - name: Start Keycloak service
+    - name: Start the Keycloak service
       ansible.builtin.systemd_service:
         name: keycloak
         state: started
         daemon_reload: true
       when: ansible_connection != 'chroot'
+
+    # SystemD is not running when using a chroot connection, in which case
+    # we manually start keycloak as a background task
+    - name: Start Keycloak (async)
+      ansible.builtin.shell: /opt/keycloak/bin/kc.sh start-dev
+      environment:
+        JAVA_OPTS_APPEND: "-Dcom.redhat.fips=false"
+        KC_BOOTSTRAP_ADMIN_USERNAME: "{{ keycloak_bootstrap_admin_username }}"
+        KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_bootstrap_admin_password }}"
+      async: 3600
+      poll: 0
+      when: ansible_connection == 'chroot'
+
+    - name: Wait Keycloak to start, by checking for port 8080 (up to 20 minutes)
+      ansible.builtin.wait_for:
+        port: 8080
+        # On an ARM emulator, this can take up to 20 minutes to complete
+        timeout: 1200
 
     ###########################################################################
     # Configure Keycloak                                                      #
@@ -178,7 +203,6 @@
         realm: "{{ keycloak_eggplant_realm }}"
         enabled: true
         state: present
-      when: ansible_connection != 'chroot'
 
     - name: Create the epgw client
       community.general.keycloak_client:
@@ -192,7 +216,6 @@
         direct_access_grants_enabled: true
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
-      when: ansible_connection != 'chroot'
 
     - name: Create an Eggplant user
       community.general.keycloak_user:
@@ -212,4 +235,26 @@
               value: aubergine
               temporary: false
         state: present
-      when: ansible_connection != 'chroot'
+
+    - name: Get running Keycloak processes
+      shell: "ps -ef | grep -v grep | grep -w java | awk '{print $2}'"
+      register: keycloak_processes
+      when: ansible_connection == 'chroot'
+
+    - name: Kill Keycloak processes
+      shell: "kill {{ item }}"
+      with_items: "{{ keycloak_processes.stdout_lines }}"
+      when: ansible_connection == 'chroot'
+
+    - wait_for:
+        path: "/proc/{{ item }}/status"
+        state: absent
+      with_items: "{{ keycloak_processes.stdout_lines }}"
+      ignore_errors: yes
+      register: killed_processes
+      when: ansible_connection == 'chroot'
+
+    - name: Force kill stuck processes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ killed_processes.results | select('failed') | map(attribute='item') | list }}"
+      when: ansible_connection == 'chroot'
