@@ -174,7 +174,7 @@
     # SystemD is not running when using a chroot connection, in which case
     # we manually start keycloak as a background task
     - name: Start Keycloak (async)
-      ansible.builtin.shell: /opt/keycloak/bin/kc.sh start-dev
+      ansible.builtin.shell: sudo -E -u keycloak /opt/keycloak/bin/kc.sh start-dev
       environment:
         KC_BOOTSTRAP_ADMIN_USERNAME: "{{ keycloak_bootstrap_admin_username }}"
         KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_bootstrap_admin_password }}"
