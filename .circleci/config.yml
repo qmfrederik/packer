@@ -6,7 +6,7 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y curl gnupg2 software-properties-common
+      - run: sudo apt-get update && sudo apt-get install -y curl gnupg2 yq software-properties-common
       - run: |
           sudo add-apt-repository -y --update ppa:longsleep/golang-backports
           sudo apt-get install -y golang-go
@@ -31,8 +31,11 @@ jobs:
           sudo apt-get install -y ansible
       - run: packer plugins install github.com/hashicorp/ansible
       - run: packer version
-      - run:
-          command: sudo -E packer build ubuntu.json
-          no_output_timeout: 20m
+      - run: sudo -E packer build ubuntu.json
+      - run: |
+          EPGW_VERSION=$(yq '.[0].vars.epgw_version' < playbook.yml)
+          echo Packaging epgw version ${EPGW_VERSION}.
+          mkdir -p raspi
+          mv epgw.linux-arm64+raspi.img.gz raspi/epgw.${EPGW_VERSION}.linux-arm64+raspi.img.gz
       - store_artifacts:
-          path: ubuntu.img.gz
+          path: raspi
