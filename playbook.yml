@@ -235,6 +235,19 @@
               temporary: false
         state: present
 
+    - name: Force admin user to change password on next login
+      community.general.keycloak_user:
+        auth_keycloak_url: http://localhost:8080/
+        auth_realm: master
+        auth_username: "{{ keycloak_bootstrap_admin_username }}"
+        auth_password: "{{ keycloak_bootstrap_admin_password }}"
+        realm: master
+        username: "{{ keycloak_bootstrap_admin_username }}"
+        credentials:
+            - type: password
+              value: "{{ keycloak_bootstrap_admin_password }}"
+              temporary: true
+
     - name: Get running Keycloak processes
       shell: "ps -ef | grep -v grep | grep -w java | awk '{print $2}'"
       register: keycloak_processes
