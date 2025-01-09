@@ -52,7 +52,7 @@
     "post-processors": [
       {
         "type": "compress",
-        "output": "{{.BuildName}}.img.xz"
+        "output": "{{.BuildName}}.img.gz"
       }
     ]
   }
