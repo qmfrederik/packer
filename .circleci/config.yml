@@ -33,4 +33,4 @@ jobs:
       - run: packer version
       - run: sudo -E packer build ubuntu.json
       - store_artifacts:
-          path: epgw-ubuntu-24.04.img
+          path: ubuntu.img.xz

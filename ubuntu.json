@@ -49,5 +49,10 @@
         "playbook_file": "./playbook.yml"
       }
     ],
-    "post-processors": []
+    "post-processors": [
+      {
+        "type": "compress",
+        "output": "{{.BuildName}}.img.xz"
+      }
+    ]
   }
