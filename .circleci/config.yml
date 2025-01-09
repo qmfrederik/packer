@@ -1,0 +1,36 @@
+# .circleci/config.yml
+jobs:
+  build:
+    machine:
+      image: ubuntu-2404:current
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run: sudo apt-get update && sudo apt-get install -y curl gnupg2 software-properties-common
+      - run: |
+          sudo add-apt-repository -y --update ppa:longsleep/golang-backports
+          sudo apt-get install -y golang-go
+      - run: git clone https://github.com/qmfrederik/packer-builder-arm
+      - run: |
+          cd packer-builder-arm
+          go mod download
+          go build
+      - run: |
+          mv packer-builder-arm src/
+          cp src/packer-builder-arm .
+      # Install Packer and Ansible
+      # We pin to an older version of Packer, because the packer-builder-arm plugin doesn't support the Packer plugin
+      # naming scheme.  See https://github.com/mkaczanowski/packer-builder-arm/pull/172 and https://github.com/michalfita/packer-plugin-cross/
+      # On Ubuntu 22.04, the version of Packer is sufficiently old.
+      - run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository -y --update "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get install -y packer=1.10.0-1
+      - run: |
+          sudo add-apt-repository -y --update ppa:ansible/ansible
+          sudo apt-get install -y ansible
+      - run: packer plugins install github.com/hashicorp/ansible
+      - run: packer version
+      - run: sudo -E packer build ubuntu.json
+      - store_artifacts:
+          path: epgw-ubuntu-24.04.img
