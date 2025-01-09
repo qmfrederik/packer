@@ -31,6 +31,8 @@ jobs:
           sudo apt-get install -y ansible
       - run: packer plugins install github.com/hashicorp/ansible
       - run: packer version
-      - run: sudo -E packer build ubuntu.json
+      - run:
+          command: sudo -E packer build ubuntu.json
+          no_output_timeout: 20m
       - store_artifacts:
           path: ubuntu.img.xz
