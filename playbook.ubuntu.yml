@@ -3,3 +3,5 @@
   apt:
     pkg:
     - openjdk-21-jre-headless
+    # Clean up after installation
+    clean: true
