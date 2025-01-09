@@ -31,6 +31,11 @@
     - name: "Install dependencies ({{ ansible_distribution }})"
       include_tasks: "playbook.{{ ansible_distribution | lower }}.yml"
 
+    - name: Customize login screen
+      template:
+        src: issue.j2
+        dest: /etc/issue
+
     ###########################################################################
     # Install Eggplant Gateway                                                #
     ###########################################################################
