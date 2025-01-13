@@ -3,5 +3,7 @@
   apt:
     pkg:
     - openjdk-21-jre-headless
+    - adb
+
     # Clean up after installation
     clean: true
