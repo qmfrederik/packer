@@ -7,8 +7,8 @@ Vagrant.configure("2") do |config|
     v.name = "eggcloud"
   end
 
-  config.vm.network "forwarded_port", guest: 5000, host: 5000
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
+  config.vm.network "forwarded_port", guest: 5001, host: 5001
+  config.vm.network "forwarded_port", guest: 8443, host: 8443
 
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "playbook.yml"

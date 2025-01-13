@@ -39,6 +39,47 @@
         dest: /etc/issue
 
     ###########################################################################
+    # Create self-signed certificate                                          #
+    ###########################################################################
+    - name: Create epgw_cert group
+      ansible.builtin.group:
+        name: epgw_cert
+        state: present
+
+    - name: Create Eggplant Gateway settings directory
+      ansible.builtin.file:
+        path: /etc/epgw
+        state: directory
+
+    - name: Create private key for self-signed certificate
+      community.crypto.openssl_privatekey:
+        path: /etc/epgw/epgw.key
+        group: epgw_cert
+        mode: u=rw,g=r
+
+    - name: Create certificate signing request (CSR) for self-signed certificate for {{ service_name }}
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: /etc/epgw/epgw.key
+        common_name: "{{ service_name }}"
+      register: csr
+
+    - name: Create self-signed certificate for {{ service_name }} from CSR
+      community.crypto.x509_certificate:
+        path: /etc/epgw/epgw.pem
+        csr_content: "{{ csr.csr }}"
+        privatekey_path: /etc/epgw/epgw.key
+        provider: selfsigned
+
+    - name: Trust the self-signed certificate
+      ansible.builtin.file:
+        src: /etc/epgw/epgw.pem
+        dest: /usr/local/share/ca-certificates/epgw.crt
+        state: link
+
+    - name: Update CA certificates
+      shell: /usr/sbin/update-ca-certificates 
+
+    ###########################################################################
     # Install Eggplant Gateway                                                #
     ###########################################################################
 
@@ -85,6 +126,12 @@
       ansible.builtin.user:
         name: epgw
 
+    - name: Adding epgw user to group epgw_cert
+      user:
+        name: epgw
+        groups: epgw_cert
+        append: yes
+
     - name: Creates /var/lib/epgw directory
       ansible.builtin.file:
         path: /var/lib/epgw
@@ -129,6 +176,12 @@
     - name: Create keycloak user
       ansible.builtin.user:
         name: keycloak
+
+    - name: Adding keycloak user to group epgw_cert
+      user:
+        name: keycloak
+        groups: epgw_cert
+        append: yes
 
     - name: Create /opt/keycloak/ directory
       ansible.builtin.file:
@@ -225,7 +278,7 @@
         # Implicit flow is used by the PCS UI
         implicit_flow_enabled: true
         redirect_uris:
-          - http://{{ service_name  }}:5000/signin-oidc
+          - https://{{ service_name  }}:5001/signin-oidc
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
 

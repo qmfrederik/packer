@@ -12,6 +12,8 @@ Restart=on-failure
 WorkingDirectory=/opt/keycloak
 Environment="KC_BOOTSTRAP_ADMIN_USERNAME={{ keycloak_bootstrap_admin_username }}"
 Environment="KC_BOOTSTRAP_ADMIN_PASSWORD={{ keycloak_bootstrap_admin_password }}"
+Environment="KC_HTTPS_CERTIFICATE_FILE=/etc/epgw/epgw.pem"
+Environment="KC_HTTPS_CERTIFICATE_KEY_FILE=/etc/epgw/epgw.key"
 
 [Install]
 WantedBy=multi-user.target
