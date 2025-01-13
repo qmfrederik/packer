@@ -217,7 +217,13 @@
         realm: "{{ keycloak_eggplant_realm }}"
         id: "{{ keycloak_epgw_client_id }}"
         client_id: "{{ keycloak_epgw_client_id }}"
+        # Direct access grants are used by Eggcloud, to authenticate a
+        # user using its username and password
         direct_access_grants_enabled: true
+        # Implicit flow is used by the PCS UI
+        implicit_flow_enabled: true
+        redirect_uris:
+          - http://*
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
 
