@@ -139,6 +139,16 @@
         owner: epgw
         mode: '0755'
 
+    - name: Create Tutorial SUT
+      ansible.builtin.copy:
+        content: |
+          {
+            "ConnectionName": "tutorial",
+            "GatewayName": "tutorial"
+          }
+        dest: /var/lib/epgw/epgw.tutorial.json
+        owner: epgw
+
     - name: Create epgw systemd service file
       template:
         src: epgw.service.j2
@@ -279,6 +289,7 @@
         implicit_flow_enabled: true
         redirect_uris:
           - https://{{ service_name  }}:5001/signin-oidc
+          - http://{{ service_name  }}:5000/signin-oidc
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
 
