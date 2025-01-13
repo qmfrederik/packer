@@ -4,9 +4,9 @@ Documentation=https://docs.eggplantsoftware.com/gateway
 After=network.target
 
 [Service]
-Environment="ASPNETCORE_URLS=http://0.0.0.0:5000"
+Environment="ASPNETCORE_URLS=http://{{ service_name }}:5000"
 Environment="EPGW_OIDC_CLIENT_SECRET={{ keycloak_epgw_client_secret }}"
-Environment="EPGW_OIDC_AUTHORITY=http://localhost:8080/realms/{{ keycloak_eggplant_realm }}"
+Environment="EPGW_OIDC_AUTHORITY=http://{{ service_name }}:8080/realms/{{ keycloak_eggplant_realm }}"
 Environment="EPGW_OIDC_CLIENT_ID={{ keycloak_epgw_client_id }}"
 Environment="EPGW_ENABLE_EGGCLOUD=true"
 

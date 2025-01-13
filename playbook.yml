@@ -25,6 +25,8 @@
     keycloak_eggplant_realm: eggplant
     keycloak_epgw_client_id: epgw
     keycloak_epgw_client_secret: a9a49b2f-6bd6-4d2c-b443-241e8448abbb
+
+    service_name: eggcloud
   become: true
 
   tasks:
@@ -223,7 +225,7 @@
         # Implicit flow is used by the PCS UI
         implicit_flow_enabled: true
         redirect_uris:
-          - http://*
+          - http://{{ service_name  }}:5000/signin-oidc
         secret: "{{ keycloak_epgw_client_secret }}"
         state: present
 
