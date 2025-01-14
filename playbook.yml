@@ -81,6 +81,33 @@
       shell: /usr/sbin/update-ca-certificates 
 
     ###########################################################################
+    # Create adb service                                                      #
+    ###########################################################################
+
+    - name: Create adb user
+      ansible.builtin.user:
+        name: adb
+        groups:
+          - plugdev
+
+    - name: Create adb systemd service file
+      template:
+        src: adb.service.j2
+        dest: /lib/systemd/system/adb.service
+
+    - name: Enable the adb service
+      ansible.builtin.systemd_service:
+        name: adb
+        enabled: true
+
+    - name: Start the adb service
+      ansible.builtin.systemd_service:
+        name: adb
+        state: started
+        daemon_reload: true
+      when: ansible_connection != 'chroot'
+
+    ###########################################################################
     # Install Eggplant Gateway                                                #
     ###########################################################################
 
