@@ -4,6 +4,7 @@
     pkg:
     - openjdk-21-jre-headless
     - adb
+    - libturbojpeg
 
     # Clean up after installation
     clean: true
