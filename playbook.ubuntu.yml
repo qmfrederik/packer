@@ -8,3 +8,9 @@
 
     # Clean up after installation
     clean: true
+
+- name: Configure udev rules for Android devices
+  ansible.builtin.file:
+    src: /lib/udev/rules.d/51-android.rules
+    dest: /etc/udev/rules.d/51-android.rules
+    state: link
