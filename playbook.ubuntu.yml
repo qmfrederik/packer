@@ -5,7 +5,8 @@
     - openjdk-21-jre-headless
     - adb
     - libturbojpeg
-    - libavcodec58
+    - libavformat58
+    - libswscale5
 
     # Update the apt cache
     update_cache: true
