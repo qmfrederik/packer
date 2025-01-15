@@ -5,6 +5,10 @@
     - openjdk-21-jre-headless
     - adb
     - libturbojpeg
+    - libavcodec58
+
+    # Update the apt cache
+    update_cache: true
 
     # Clean up after installation
     clean: true
